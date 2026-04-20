@@ -56,7 +56,39 @@ Verify existing features still work:
 - Test core flows of related features
 - Verify no visual regressions on shared components
 
-### 5. Run Automated Tests
+### 5. Helm Chart Validation
+If Helm charts exist in `helm/`, run these checks:
+
+```bash
+# 1. Lint: syntax and basic best practices
+helm lint helm/<chart-name>/
+
+# 2. Schema validation: render templates and validate against Kubernetes schemas
+helm template <release-name> helm/<chart-name>/ \
+  -f helm/<chart-name>/values.yaml \
+  | kubeconform -strict -summary -
+
+# 3. Deep best-practice check: security context, resource limits, probes, etc.
+helm template <release-name> helm/<chart-name>/ \
+  -f helm/<chart-name>/values.yaml \
+  | kube-score score -
+```
+
+**Prerequisites (install once if missing):**
+```bash
+# kubeconform
+go install github.com/yannh/kubeconform/cmd/kubeconform@latest
+# kube-score
+go install github.com/zegl/kube-score/cmd/kube-score@latest
+```
+
+**Treat as bugs:**
+- `helm lint` errors → **High**
+- `kubeconform` schema errors → **High**
+- `kube-score` CRITICAL findings → **High**
+- `kube-score` WARNING findings → **Medium**
+
+### 6. Run Automated Tests
 Run existing test suites before manual testing:
 ```bash
 npm test                  # Vitest: integration tests for API routes
@@ -64,7 +96,7 @@ npm run test:e2e          # Playwright: E2E tests from previous QA runs
 ```
 Note any failures — these are regressions and must be treated as High bugs.
 
-### 6. Write Unit Tests
+### 7. Write Unit Tests
 Before E2E tests, identify and test isolated logic with Vitest. Place tests **co-located** next to the source file (e.g. `src/hooks/useFeature.test.ts` next to `src/hooks/useFeature.ts`):
 
 **What to unit test (evaluate each):**
@@ -83,7 +115,7 @@ For each unit test:
 
 Run to confirm all pass: `npm test`
 
-### 7. Write E2E Tests
+### 8. Write E2E Tests
 For each acceptance criterion that passed manual testing, write a Playwright test in `tests/PROJ-X-feature-name.spec.ts`:
 - One `test()` per acceptance criterion
 - Tests describe the user journey in plain language
@@ -91,11 +123,11 @@ For each acceptance criterion that passed manual testing, write a Playwright tes
 
 These tests become the permanent regression suite for this feature.
 
-### 8. Document Results
+### 9. Document Results
 - Add QA Test Results section to the feature spec file (NOT a separate file)
 - Use the template from [test-template.md](test-template.md)
 
-### 9. User Review
+### 10. User Review
 Present test results with clear summary:
 - Total acceptance criteria: X passed, Y failed
 - Bugs found: breakdown by severity
@@ -134,6 +166,7 @@ If your context was compacted mid-task:
 - [ ] Additional edge cases identified and tested
 - [ ] Cross-browser tested (Chrome, Firefox, Safari)
 - [ ] Responsive tested (375px, 768px, 1440px)
+- [ ] Helm charts validated (`helm lint`, `kubeconform`, `kube-score`) if charts exist
 - [ ] Security audit completed (red-team perspective)
 - [ ] Regression test on related features
 - [ ] Every bug documented with severity + steps to reproduce
