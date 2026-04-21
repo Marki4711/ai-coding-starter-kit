@@ -36,13 +36,14 @@ Use `AskUserQuestion` for:
 - **No schema yet:** derive initial schema from domain model, apply best practices from the start
 - **Schema exists:** verify consistency with domain model and check for drift
 - In both cases, apply DB design best practices: naming conventions, data types, indexes, constraints, foreign keys
-- Fix findings before adding feature-specific changes
+- **Present findings to the user and wait for approval before writing any migration**
 
 ### 4. Create Database Schema
-- Write SQL migration files according to project conventions
+- Write SQL migration files according to project conventions only after user approval
 - Add indexes on performance-critical columns (WHERE, ORDER BY, JOIN)
 - Use foreign keys with ON DELETE CASCADE where appropriate
 - Apply access control mechanisms appropriate for the project's database setup
+- **Show the migration SQL to the user before applying it — never apply automatically**
 
 ### 5. Create API Routes
 - Create route handlers according to the project's structure (see `CLAUDE.md`)
